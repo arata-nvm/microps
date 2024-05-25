@@ -7,16 +7,25 @@
 #include "util.h"
 #include "net.h"
 
+#include "ip.h"
+
+struct net_protocol {
+    struct net_protocol *next;
+    uint16_t type;
+    net_protocol_handler_t handler;
+};
+
 /*
  * NOTE: if you want to add/delete the entries after net_run(),
  *       you need to protect these lists with a lock.
  */
-static struct net_device* devices;
+static struct net_device *devices;
+static struct net_protocol *protocols;
 
 struct net_device*
 net_device_alloc(void)
 {
-    struct net_device* dev;
+    struct net_device *dev;
 
     dev = memory_alloc(sizeof(*dev));
     if (!dev) {
@@ -30,7 +39,7 @@ net_device_alloc(void)
  * NOTE: must not be call after net_run()
  */
 int
-net_device_register(struct net_device* dev)
+net_device_register(struct net_device *dev)
 {
     static unsigned int index = 0;
 
@@ -43,7 +52,7 @@ net_device_register(struct net_device* dev)
 }
 
 static int
-net_device_open(struct net_device* dev)
+net_device_open(struct net_device *dev)
 {
     infof("dev=%s", dev->name);
     if (NET_DEVICE_IS_UP(dev)) {
@@ -61,7 +70,7 @@ net_device_open(struct net_device* dev)
 }
 
 static int
-net_device_close(struct net_device* dev)
+net_device_close(struct net_device *dev)
 {
     infof("dev=%s", dev->name);
     if (!NET_DEVICE_IS_UP(dev)) {
@@ -79,7 +88,7 @@ net_device_close(struct net_device* dev)
 }
 
 int
-net_device_output(struct net_device* dev, uint16_t type, const uint8_t* data, size_t len, const void* dst)
+net_device_output(struct net_device *dev, uint16_t type, const uint8_t *data, size_t len, const void *dst)
 {
     debugf("dev=%s, type=0x%04x, len=%zu", dev->name, type, len);
     debugdump(data, len);
@@ -102,11 +111,47 @@ net_device_output(struct net_device* dev, uint16_t type, const uint8_t* data, si
     return 0;
 }
 
+/*
+ * NOTE: must not be call after net_run()
+ */
 int
-net_input(uint16_t type, const uint8_t* data, size_t len, struct net_device* dev)
+net_protocol_register(uint16_t type, net_protocol_handler_t handler)
 {
+    struct net_protocol *proto;
+
+    for (proto = protocols; proto; proto = proto->next) {
+        if (type == proto->type) {
+            errorf("already registered, type=0x%04x", proto->type);
+            return -1;
+        }
+    }
+    proto = memory_alloc(sizeof(*proto));
+    if (!proto) {
+        errorf("memory_alloc() failure");
+        return -1;
+    }
+    proto->type = type;
+    proto->handler = handler;
+    proto->next = protocols;
+    protocols = proto;
+    infof("success, type=0x%04x", proto->type);
+    return 0;
+}
+
+int
+net_input(uint16_t type, const uint8_t *data, size_t len, struct net_device *dev)
+{
+    struct net_protocol *proto;
+
     debugf("dev=%s, type=0x%04x, len=%zu", dev->name, type, len);
     debugdump(data, len);
+    for (proto = protocols; proto; proto = proto->next) {
+        if (proto->type == type) {
+            proto->handler(data, len, dev);
+            return 0;
+        }
+    }
+    // unsupported protocol
     return 0;
 }
 
@@ -118,6 +163,10 @@ net_init(void)
         errorf("platform_init() failure");
         return -1;
     }
+    if (ip_init() == -1) {
+        errorf("ip_init() failure");
+        return -1;
+    }
     infof("success");
     return 0;
 }
@@ -125,7 +174,7 @@ net_init(void)
 int
 net_run(void)
 {
-    struct net_device* dev;
+    struct net_device *dev;
 
     infof("startup...");
     if (platform_run() == -1) {
@@ -142,7 +191,7 @@ net_run(void)
 int
 net_shutdown(void)
 {
-    struct net_device* dev;
+    struct net_device *dev;
 
     infof("shutting down...");
     if (platform_shutdown() == -1) {
