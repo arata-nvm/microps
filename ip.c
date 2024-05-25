@@ -17,7 +17,13 @@
 
 #define IP_HDR_OFFSET_MASK 0x1fff
 
-const ip_addr_t IP_ADDR_ANY = 0x00000000; /* 0.0.0.0 */
+struct ip_protocol {
+    struct ip_protocol *next;
+    uint8_t protocol;
+    ip_protocol_handler_t handler;
+};
+
+const ip_addr_t IP_ADDR_ANY       = 0x00000000; /* 0.0.0.0 */
 const ip_addr_t IP_ADDR_BROADCAST = 0xffffffff; /* 255.255.255.255 */
 
 /*
@@ -25,6 +31,7 @@ const ip_addr_t IP_ADDR_BROADCAST = 0xffffffff; /* 255.255.255.255 */
  *       you need to protect these lists with a mutex.
  */
 static struct ip_iface *ifaces;
+static struct ip_protocol *protocols;
 
 int
 ip_addr_pton(const char *p, ip_addr_t *n)
@@ -97,10 +104,9 @@ ip_iface_register(struct net_device *dev, struct ip_iface *iface)
     char addr3[IP_ADDR_STR_LEN];
 
     infof("dev=%s, %s, %s, %s", dev->name,
-          ip_addr_ntop(iface->unicast, addr1, sizeof(addr1)),
-          ip_addr_ntop(iface->netmask, addr2, sizeof(addr2)),
-          ip_addr_ntop(iface->broadcast, addr3, sizeof(addr3))
-    );
+        ip_addr_ntop(iface->unicast, addr1, sizeof(addr1)),
+        ip_addr_ntop(iface->netmask, addr2, sizeof(addr2)),
+        ip_addr_ntop(iface->broadcast, addr3, sizeof(addr3)));
     if (net_device_add_iface(dev, NET_IFACE(iface)) == -1) {
         errorf("net_device_add_iface() failure");
         return -1;
@@ -121,6 +127,14 @@ ip_iface_select(ip_addr_t addr)
         }
     }
     return NULL;
+}
+
+/*
+ * NOTE: must not be call after net_run()
+ */
+int
+ip_protocol_register(uint8_t protocol, ip_protocol_handler_t handler)
+{
 }
 
 static void
@@ -219,8 +233,7 @@ ip_output_device(struct ip_iface *iface, const uint8_t *data, size_t len, ip_add
     if (NET_IFACE(iface)->dev->flags & NET_DEVICE_FLAG_NEED_ARP) {
         if (target == iface->broadcast || target == IP_ADDR_BROADCAST) {
             memcpy(hwaddr, NET_IFACE(iface)->dev->broadcast, NET_IFACE(iface)->dev->alen);
-        }
-        else {
+        } else {
             errorf("ARP does not implement");
             return -1;
         }
@@ -284,8 +297,8 @@ ip_output(uint8_t protocol, const uint8_t *data, size_t len, ip_addr_t src, ip_a
         return -1;
     }
     if (NET_IFACE(iface)->dev->mtu < IP_HDR_SIZE_MIN + len) {
-        errorf("too long, dev=%s, mtu=%u < %zu", NET_IFACE(iface)->dev->name, NET_IFACE(iface)->dev->mtu,
-               IP_HDR_SIZE_MIN + len);
+        errorf("too long, dev=%s, mtu=%u < %zu",
+            NET_IFACE(iface)->dev->name, NET_IFACE(iface)->dev->mtu, IP_HDR_SIZE_MIN + len);
         return -1;
     }
     id = random16();
@@ -294,8 +307,8 @@ ip_output(uint8_t protocol, const uint8_t *data, size_t len, ip_addr_t src, ip_a
         errorf("ip_build_packet() failure");
         return -1;
     }
-    if (ip_output_device(iface, buf, plen, dst) == -1) {
-        errorf("ip_output_devie() failure");
+    if (ip_output_device(iface, buf, plen, dst) ==-1) {
+        errorf("ip_output_device() failure");
         return -1;
     }
     return plen;
