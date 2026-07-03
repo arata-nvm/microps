@@ -37,6 +37,7 @@
 
 struct net_device {
     struct net_device *next;
+    struct net_iface *ifaces;
     unsigned int index;
     char name[IFNAMSIZ];
     uint16_t type;
@@ -65,7 +66,7 @@ struct net_iface {
 
 typedef void (*net_protocol_handler_t)(const uint8_t *data, size_t len, struct net_device *dev);
 
-extern struct net_device*
+extern struct net_device *
 net_device_alloc(void);
 extern int
 net_device_register(struct net_device *dev);
