@@ -3,7 +3,7 @@
 
 #include "net.h"
 
-extern struct net_device *
+extern struct net_device*
 loopback_init(void);
 
 #endif

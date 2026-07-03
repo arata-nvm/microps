@@ -16,7 +16,7 @@ platform_shutdown(void);
  * Memory
  */
 
-extern void *
+extern void*
 memory_alloc(size_t size);
 extern void
 memory_free(void *ptr);

@@ -31,7 +31,7 @@ platform_shutdown(void)
  * Memory
  */
 
-void *
+void*
 memory_alloc(size_t size)
 {
     return calloc(1, size);
@@ -72,5 +72,5 @@ lock_release(lock_t *lock)
 uint16_t
 random16(void)
 {
-    return random() % (UINT16_MAX+1);
+    return random() % (UINT16_MAX + 1);
 }

@@ -8,7 +8,7 @@
 #define LOOPBACK_MTU UINT16_MAX /* Maximum size of IP datagram */
 
 static int
-loopback_output(struct net_device* dev, uint16_t type, const uint8_t* data, size_t len, const void* dst)
+loopback_output(struct net_device *dev, uint16_t type, const uint8_t *data, size_t len, const void *dst)
 {
     debugf("dev=%s, type=0x%04x, len=%zu", dev->name, type, len);
     debugdump(data, len);
@@ -22,7 +22,7 @@ static struct net_device_ops loopback_ops = {
 struct net_device*
 loopback_init(void)
 {
-    struct net_device* dev;
+    struct net_device *dev;
 
     dev = net_device_alloc();
     if (!dev) {

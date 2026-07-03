@@ -70,7 +70,8 @@ sched_task_sleep(struct sched_task *task, lock_t *lock, const struct timespec *a
     tasks_add(task);
     if (abstime) {
         ret = pthread_cond_timedwait(&task->cond, lock, abstime);
-    } else {
+    }
+    else {
         ret = pthread_cond_wait(&task->cond, lock);
     }
     tasks_del(task);

@@ -45,26 +45,29 @@ hexdump(FILE *fp, const void *data, size_t size)
     int offset, index;
 
     flockfile(fp);
-    src = (unsigned char *)data;
+    src = (unsigned char*)data;
     fprintf(fp, "+------+-------------------------------------------------+------------------+\n");
-    for(offset = 0; offset < (int)size; offset += 16) {
+    for (offset = 0; offset < (int)size; offset += 16) {
         fprintf(fp, "| %04x | ", offset);
-        for(index = 0; index < 16; index++) {
-            if(offset + index < (int)size) {
+        for (index = 0; index < 16; index++) {
+            if (offset + index < (int)size) {
                 fprintf(fp, "%02x ", 0xff & src[offset + index]);
-            } else {
+            }
+            else {
                 fprintf(fp, "   ");
             }
         }
         fprintf(fp, "| ");
-        for(index = 0; index < 16; index++) {
-            if(offset + index < (int)size) {
-                if(isascii(src[offset + index]) && isprint(src[offset + index])) {
+        for (index = 0; index < 16; index++) {
+            if (offset + index < (int)size) {
+                if (isascii(src[offset + index]) && isprint(src[offset + index])) {
                     fprintf(fp, "%c", src[offset + index]);
-                } else {
+                }
+                else {
                     fprintf(fp, ".");
                 }
-            } else {
+            }
+            else {
                 fprintf(fp, " ");
             }
         }
@@ -86,7 +89,7 @@ queue_init(struct queue *queue)
     queue->num = 0;
 }
 
-struct queue_entry *
+struct queue_entry*
 queue_push(struct queue *queue, struct queue_entry *entry)
 {
     if (!queue || !entry) {
@@ -104,7 +107,7 @@ queue_push(struct queue *queue, struct queue_entry *entry)
     return entry;
 }
 
-struct queue_entry *
+struct queue_entry*
 queue_pop(struct queue *queue)
 {
     struct queue_entry *entry;
@@ -121,7 +124,7 @@ queue_pop(struct queue *queue)
     return entry;
 }
 
-struct queue_entry *
+struct queue_entry*
 queue_peek(struct queue *queue)
 {
     if (!queue || !queue->head) {
@@ -157,16 +160,17 @@ queue_foreach(struct queue *queue, queue_func_t func, void *arg)
 static int endian;
 
 static int
-byteorder(void) {
+byteorder(void)
+{
     uint32_t x = 0x00000001;
 
-    return *(uint8_t *)&x ? __LITTLE_ENDIAN : __BIG_ENDIAN;
+    return *(uint8_t*)&x ? __LITTLE_ENDIAN : __BIG_ENDIAN;
 }
 
 static uint16_t
 byteswap16(uint16_t v)
 {
-    return (v & 0x00ff) << 8 | (v & 0xff00 ) >> 8;
+    return (v & 0x00ff) << 8 | (v & 0xff00) >> 8;
 }
 
 static uint32_t
@@ -226,7 +230,7 @@ cksum16(uint16_t *addr, uint16_t count, uint32_t init)
         count -= 2;
     }
     if (count > 0) {
-        sum += *(uint8_t *)addr;
+        sum += *(uint8_t*)addr;
     }
     while (sum >> 16) {
         sum = (sum & 0xffff) + (sum >> 16);

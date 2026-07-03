@@ -78,11 +78,11 @@ typedef void (*queue_func_t)(void *arg, struct queue_entry *entry);
 
 extern void
 queue_init(struct queue *queue);
-extern struct queue_entry *
+extern struct queue_entry*
 queue_push(struct queue *queue, struct queue_entry *entry);
-extern struct queue_entry *
+extern struct queue_entry*
 queue_pop(struct queue *queue);
-extern struct queue_entry *
+extern struct queue_entry*
 queue_peek(struct queue *queue);
 extern void
 queue_foreach(struct queue *queue, queue_func_t func, void *arg);

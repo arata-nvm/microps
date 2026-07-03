@@ -60,7 +60,7 @@ intr_raise(unsigned int irq)
     return pthread_kill(tid, (int)irq);
 }
 
-static void *
+static void*
 intr_main(void *arg)
 {
     int terminate = 0, sig, err;
