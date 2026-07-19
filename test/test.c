@@ -82,8 +82,8 @@ app_main(void)
     dst = src;
     debugf("press Ctrl+C to terminate");
     while (!terminate) {
-        if (ip_output(1, test_data + offset, sizeof(test_data) - offset, src, dst) == -1) {
-            errorf("net_device_output() failure");
+        if (ip_output(IP_PROTOCOL_ICMP, test_data + offset, sizeof(test_data) - offset, src, dst) == -1) {
+            errorf("ip_output() failure");
             break;
         }
         sleep(1);
