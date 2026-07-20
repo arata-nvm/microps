@@ -8,8 +8,6 @@
 #include "util.h"
 #include "net.h"
 
-#include "ip.h"
-
 struct net_protocol {
     struct net_protocol *next;
     uint16_t type;
@@ -327,8 +325,7 @@ net_shutdown(void)
 
     infof("shutting down...");
     if (platform_shutdown() == -1) {
-        errorf("platform_shutdown() failure");
-        return -1;
+        warnf("platform_shutdown() failure");
     }
     for (dev = devices; dev; dev = dev->next) {
         net_device_close(dev);

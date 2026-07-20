@@ -18,8 +18,6 @@
 #include "test.h"
 #include "sock.h"
 
-#include "ip.h"
-
 static volatile sig_atomic_t terminate;
 
 static void
